@@ -3,7 +3,7 @@ import PublicarProducto from './components/PublicarProducto'
 import './App.css'
 
 function App() {
-  // Productos de ejemplo del proyecto EcoAgrario
+  // Productos iniciales del proyecto EcoAgrario
   const productosIniciales = [
     'Tomate - Producto activo',
     'Cebolla - Producto activo',
@@ -12,42 +12,85 @@ function App() {
     'Plátano - Producto agotado',
   ]
 
-  // Estado para almacenar el texto de búsqueda
+  // Recuperar productos guardados en el navegador
+  const productosGuardados =
+    JSON.parse(localStorage.getItem('productosEcoAgrario')) || []
+
+  // Combinar productos iniciales y productos publicados
+  const productosInicialesCompletos = [
+    ...productosIniciales,
+    ...productosGuardados,
+  ]
+
+  // Estado del texto de búsqueda
   const [textoBusqueda, setTextoBusqueda] = useState('')
 
-  // Estado para mostrar los resultados
-  const [resultados, setResultados] = useState(productosIniciales)
+  // Estado de los productos mostrados
+  const [resultados, setResultados] = useState(
+    productosInicialesCompletos
+  )
 
-  // Estado para mostrar u ocultar el formulario de publicación
+  // Estado para mostrar u ocultar el formulario
   const [mostrarPublicar, setMostrarPublicar] = useState(false)
 
-  // Función para buscar productos
+  // Buscar productos
   const buscarProducto = () => {
     const texto = textoBusqueda.trim().toLowerCase()
 
-    // Si el campo está vacío, mostrar todos los productos
     if (texto === '') {
-      setResultados(productosIniciales)
+      setResultados(productosInicialesCompletos)
       return
     }
 
-    // Buscar productos ignorando mayúsculas y minúsculas
-    const encontrados = productosIniciales.filter((producto) =>
-      producto.toLowerCase().includes(texto)
+    const encontrados = productosInicialesCompletos.filter(
+      (producto) =>
+        producto.toLowerCase().includes(texto)
     )
 
     setResultados(encontrados)
   }
 
+  // Recibir un nuevo producto desde el componente de publicación
+  const agregarProducto = (nuevoProducto) => {
+    const productosActualizados = [
+      ...productosInicialesCompletos,
+      nuevoProducto,
+    ]
+
+    // Guardar productos publicados en el navegador
+    const productosPublicados = [
+      ...productosGuardados,
+      nuevoProducto,
+    ]
+
+    localStorage.setItem(
+      'productosEcoAgrario',
+      JSON.stringify(productosPublicados)
+    )
+
+    // Actualizar la lista visible
+    setResultados(productosActualizados)
+
+    // Limpiar búsqueda
+    setTextoBusqueda('')
+
+    // Mostrar la lista actualizada
+    setMostrarPublicar(false)
+  }
+
   return (
     <div className="contenedor">
+
       {/* Encabezado principal */}
       <header className="encabezado">
         <h1>EcoAgrario</h1>
-        <p>Consulta y búsqueda de productos agrícolas</p>
+        <p>
+          Consulta y búsqueda de productos agrícolas
+        </p>
       </header>
 
       <main>
+
         {/* Módulo de búsqueda */}
         <section className="busqueda">
           <h2>Buscar producto</h2>
@@ -56,10 +99,15 @@ function App() {
             type="text"
             placeholder="Escriba un producto"
             value={textoBusqueda}
-            onChange={(evento) => setTextoBusqueda(evento.target.value)}
+            onChange={(evento) =>
+              setTextoBusqueda(evento.target.value)
+            }
           />
 
-          <button type="button" onClick={buscarProducto}>
+          <button
+            type="button"
+            onClick={buscarProducto}
+          >
             Buscar producto
           </button>
         </section>
@@ -71,7 +119,9 @@ function App() {
           {resultados.length > 0 ? (
             <ul>
               {resultados.map((producto, indice) => (
-                <li key={indice}>{producto}</li>
+                <li key={indice}>
+                  {producto}
+                </li>
               ))}
             </ul>
           ) : (
@@ -79,11 +129,13 @@ function App() {
           )}
         </section>
 
-        {/* Botón para mostrar el formulario de publicación */}
+        {/* Botón para mostrar el formulario */}
         <section className="accion-publicar">
           <button
             type="button"
-            onClick={() => setMostrarPublicar(!mostrarPublicar)}
+            onClick={() =>
+              setMostrarPublicar(!mostrarPublicar)
+            }
           >
             {mostrarPublicar
               ? 'Ocultar publicación'
@@ -91,8 +143,13 @@ function App() {
           </button>
         </section>
 
-        {/* Componente de publicación */}
-        {mostrarPublicar && <PublicarProducto />}
+        {/* Formulario de publicación */}
+        {mostrarPublicar && (
+          <PublicarProducto
+            onProductoPublicado={agregarProducto}
+          />
+        )}
+
       </main>
     </div>
   )
