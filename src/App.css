@@ -1,20 +1,10 @@
-/* Estilos generales de EcoAgrario */
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f7f4;
-}
+/* Contenedor principal */
 
 .contenedor {
-  width: 100%;
+  width: 90%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 30px 0;
 }
 
 /* Encabezado */
@@ -25,8 +15,8 @@ body {
 }
 
 .encabezado h1 {
-  margin-bottom: 8px;
-  font-size: 36px;
+  margin: 0 0 10px;
+  font-size: 42px;
 }
 
 .encabezado p {
@@ -40,21 +30,65 @@ body {
 .productos,
 .accion-publicar,
 .publicar-producto {
-  background: white;
+  background: #ffffff;
   padding: 25px;
   margin-bottom: 20px;
   border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
-
-/* Títulos */
 
 h2 {
   margin-top: 0;
 }
 
-/* Campos */
+/* Búsqueda */
 
-.busqueda input,
+.busqueda input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+/* Botones */
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.accion-publicar {
+  text-align: center;
+}
+
+/* Productos */
+
+.productos ul {
+  padding-left: 20px;
+}
+
+.productos li {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+/* Formulario de publicación */
+
+.publicar-producto form {
+  display: flex;
+  flex-direction: column;
+}
+
+.publicar-producto label {
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
 .publicar-producto input,
 .publicar-producto textarea {
   width: 100%;
@@ -70,46 +104,9 @@ h2 {
   resize: vertical;
 }
 
-/* Etiquetas del formulario */
-
-.publicar-producto label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
-}
-
-/* Botones */
-
-button {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-/* Lista de productos */
-
-.productos ul {
-  padding-left: 20px;
-}
-
-.productos li {
-  margin-bottom: 10px;
-}
-
-/* Formulario */
-
-.publicar-producto form {
-  display: flex;
-  flex-direction: column;
-}
-
 .publicar-producto button {
-  margin-top: 10px;
+  margin-top: 5px;
 }
-
-/* Mensajes */
 
 .mensaje {
   margin-top: 20px;
