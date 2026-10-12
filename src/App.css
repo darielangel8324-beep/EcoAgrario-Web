@@ -112,3 +112,13 @@ button {
   margin-top: 20px;
   font-weight: bold;
 }
+
+[role="status"] {
+  margin: 15px 0;
+  padding: 12px;
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+  font-weight: bold;
+}

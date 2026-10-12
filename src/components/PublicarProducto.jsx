@@ -5,17 +5,37 @@ function PublicarProducto({ onProductoPublicado }) {
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [cantidad, setCantidad] = useState('')
+  const [precio, setPrecio] = useState('')
   const [ubicacion, setUbicacion] = useState('')
+  const [nombreProductor, setNombreProductor] = useState('')
+  const [telefonoProductor, setTelefonoProductor] = useState('')
 
   // Estado para mostrar mensajes de validación
   const [mensaje, setMensaje] = useState('')
 
   // Función para validar y publicar el producto
-  const validarYPublicar = (evento) => {
+  const validarYPublicar = async (evento) => {
     evento.preventDefault()
 
     // Limpiar mensaje anterior
     setMensaje('')
+    // Validar nombre del productor
+if (nombreProductor.trim() === '') {
+  setMensaje('Ingrese el nombre del productor')
+  return
+}
+
+// Validar teléfono del productor
+if (telefonoProductor.trim() === '') {
+  setMensaje('Ingrese el teléfono de contacto')
+  return
+}
+
+// Validar formato del teléfono
+if (!/^[0-9+\s()-]{7,20}$/.test(telefonoProductor.trim())) {
+  setMensaje('Ingrese un teléfono válido')
+  return
+}
 
     // Validar nombre vacío
     if (nombre.trim() === '') {
@@ -32,6 +52,26 @@ function PublicarProducto({ onProductoPublicado }) {
     // Validar cantidad vacía
     if (cantidad.trim() === '') {
       setMensaje('Ingrese la cantidad del producto')
+      return
+    }
+
+    // Validar precio vacío
+    if (precio.trim() === '') {
+      setMensaje('Ingrese el precio del producto')
+      return
+    }
+
+    // Validar que el precio contenga solo números
+    if (!/^\d+$/.test(precio.trim())) {
+      setMensaje('El precio debe contener solo números')
+      return
+    }
+
+    // Validar que el precio no sea negativo
+    const precioNumero = Number(precio)
+
+    if (precioNumero < 0) {
+      setMensaje('El precio no puede ser negativo')
       return
     }
 
@@ -103,20 +143,56 @@ function PublicarProducto({ onProductoPublicado }) {
       return
     }
 
-    // Crear producto con estado inicial activo
-    const producto = `${nombre.trim()} - Producto activo`
 
-    // Enviar el producto al componente principal
-    onProductoPublicado(producto)
+// Preparar los datos completos del producto
+const producto = {
+  nombreProductor: nombreProductor.trim(),
+  telefonoProductor: telefonoProductor.trim(),
+  nombre: nombre.trim(),
+  descripcion: descripcion.trim(),
+  cantidad: Number(cantidad),
+  precio: Number(precio),
+  ubicacion: ubicacion.trim(),
+}
 
-    // Mostrar confirmación
-    setMensaje('Producto publicado correctamente')
+    try {
+      // Enviar el producto a la API
+      const respuesta = await fetch('/api/productos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(producto),
+      })
 
-    // Limpiar el formulario
-    setNombre('')
-    setDescripcion('')
-    setCantidad('')
-    setUbicacion('')
+      const datos = await respuesta.json()
+
+      // Comprobar si la API rechazó la publicación
+      if (!respuesta.ok) {
+        setMensaje(
+          datos.error || 'No se pudo publicar el producto'
+        )
+        return
+      }
+
+      // Enviar el producto guardado al componente principal
+      onProductoPublicado(datos.producto)
+
+      // Mostrar confirmación
+      setMensaje('Producto publicado correctamente')
+
+      // Limpiar el formulario
+      setNombre('')
+      setDescripcion('')
+      setCantidad('')
+      setPrecio('')
+      setUbicacion('')
+      setNombreProductor('')
+      setTelefonoProductor('')
+    } catch (error) {
+      setMensaje('No fue posible conectar con la API')
+    }
+
   }
 
   return (
@@ -124,6 +200,37 @@ function PublicarProducto({ onProductoPublicado }) {
       <h2>Publicar producto</h2>
 
       <form onSubmit={validarYPublicar}>
+        
+        {/* Campo para el nombre del productor */}
+        <label htmlFor="nombreProductor">
+          Nombre del productor
+        </label>
+
+        <input
+          id="nombreProductor"
+          type="text"
+          value={nombreProductor}
+          onChange={(evento) =>
+            setNombreProductor(evento.target.value)
+          }
+          placeholder="Nombre del productor"
+        />
+
+        {/* Campo para el teléfono del productor */}
+        <label htmlFor="telefonoProductor">
+          Teléfono de contacto
+        </label>
+
+        <input
+          id="telefonoProductor"
+          type="tel"
+          value={telefonoProductor}
+          onChange={(evento) =>
+            setTelefonoProductor(evento.target.value)
+          }
+          placeholder="Ej. 3001234567"
+        />
+
 
         {/* Campo para el nombre */}
         <label htmlFor="nombre">
@@ -168,7 +275,20 @@ function PublicarProducto({ onProductoPublicado }) {
           }
           placeholder="Cantidad disponible"
         />
+<label htmlFor="precio">
+  Precio por unidad (COP)
+</label>
 
+<input
+  id="precio"
+  type="number"
+  min="0"
+  value={precio}
+  onChange={(evento) =>
+    setPrecio(evento.target.value)
+  }
+  placeholder="Ej. 2500"
+/>
         {/* Campo para la ubicación */}
         <label htmlFor="ubicacion">
           Ubicación

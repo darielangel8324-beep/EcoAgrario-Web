@@ -1,87 +1,78 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import PublicarProducto from './components/PublicarProducto'
 import './App.css'
 
 function App() {
-  // Productos iniciales del proyecto EcoAgrario
-  const productosIniciales = [
-    'Tomate - Producto activo',
-    'Cebolla - Producto activo',
-    'Papa - Producto reservado',
-    'Yuca - Producto activo',
-    'Plátano - Producto agotado',
-  ]
-
-  // Recuperar productos guardados en el navegador
-  const productosGuardados =
-    JSON.parse(localStorage.getItem('productosEcoAgrario')) || []
-
-  // Combinar productos iniciales y productos publicados
-  const productosInicialesCompletos = [
-    ...productosIniciales,
-    ...productosGuardados,
-  ]
-
-  // Estado del texto de búsqueda
+  const [productos, setProductos] = useState([])
+  const [resultados, setResultados] = useState([])
   const [textoBusqueda, setTextoBusqueda] = useState('')
-
-  // Estado de los productos mostrados
-  const [resultados, setResultados] = useState(
-    productosInicialesCompletos
-  )
-
-  // Estado para mostrar u ocultar el formulario
   const [mostrarPublicar, setMostrarPublicar] = useState(false)
+  const [cargando, setCargando] = useState(true)
+  const [errorAPI, setErrorAPI] = useState('')
+  const [mensaje, setMensaje] = useState('')
+  // Consultar los productos guardados en MongoDB
+  useEffect(() => {
+    const cargarProductos = async () => {
+      try {
+        const respuesta = await fetch('/api/productos')
 
-  // Buscar productos
-  const buscarProducto = () => {
-    const texto = textoBusqueda.trim().toLowerCase()
+        if (!respuesta.ok) {
+          throw new Error('No se pudieron consultar los productos')
+        }
 
-    if (texto === '') {
-      setResultados(productosInicialesCompletos)
-      return
+        const datos = await respuesta.json()
+
+        setProductos(datos)
+        setResultados(datos)
+      } catch (error) {
+        setErrorAPI('No fue posible conectar con la API de EcoAgrario')
+      } finally {
+        setCargando(false)
+      }
     }
 
-    const encontrados = productosInicialesCompletos.filter(
-      (producto) =>
-        producto.toLowerCase().includes(texto)
+    cargarProductos()
+  }, [])
+
+
+  // Normalizar texto para ignorar tildes y mayúsculas
+  const normalizarTexto = (texto) =>
+    texto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+
+  // Buscar productos por nombre
+  const buscarProducto = () => {
+    const texto = normalizarTexto(textoBusqueda)
+
+    const encontrados = productos.filter((producto) =>
+      normalizarTexto(producto.nombre).includes(texto)
     )
 
     setResultados(encontrados)
   }
 
-  // Recibir un nuevo producto desde el componente de publicación
-  const agregarProducto = (nuevoProducto) => {
-    const productosActualizados = [
-      ...productosInicialesCompletos,
-      nuevoProducto,
-    ]
 
-    // Guardar productos publicados en el navegador
-    const productosPublicados = [
-      ...productosGuardados,
-      nuevoProducto,
-    ]
+  // Recibir el producto guardado por la API
 
-    localStorage.setItem(
-      'productosEcoAgrario',
-      JSON.stringify(productosPublicados)
-    )
+const agregarProducto = (nuevoProducto) => {
+  const productosActualizados = [
+    nuevoProducto,
+    ...productos,
+  ]
 
-    // Actualizar la lista visible
-    setResultados(productosActualizados)
-
-    // Limpiar búsqueda
-    setTextoBusqueda('')
-
-    // Mostrar la lista actualizada
-    setMostrarPublicar(false)
-  }
+  setProductos(productosActualizados)
+  setResultados(productosActualizados)
+  setTextoBusqueda('')
+  setMostrarPublicar(false)
+  setMensaje('Producto publicado correctamente')
+}
 
   return (
     <div className="contenedor">
-
-      {/* Encabezado principal */}
       <header className="encabezado">
         <h1>EcoAgrario</h1>
         <p>
@@ -90,8 +81,6 @@ function App() {
       </header>
 
       <main>
-
-        {/* Módulo de búsqueda */}
         <section className="busqueda">
           <h2>Buscar producto</h2>
 
@@ -112,15 +101,65 @@ function App() {
           </button>
         </section>
 
-        {/* Lista de productos */}
+{mensaje && (
+  <p role="status">{mensaje}</p>
+)}
+
         <section className="productos">
           <h2>Productos disponibles</h2>
 
-          {resultados.length > 0 ? (
+          {cargando ? (
+            <p>Cargando productos...</p>
+          ) : errorAPI ? (
+            <p>{errorAPI}</p>
+          ) : resultados.length > 0 ? (
             <ul>
-              {resultados.map((producto, indice) => (
-                <li key={indice}>
-                  {producto}
+              {resultados.map((producto) => (
+                <li key={producto._id}>
+                  <strong>{producto.nombre}</strong>
+                  <p>{producto.descripcion}</p>
+                  <p>
+                    Cantidad: {producto.cantidad}
+                  </p>
+                  <p>
+                    Precio: $
+                    {Number(producto.precio).toLocaleString('es-CO')} COP
+                  </p>
+                  <p>
+                    Ubicación: {producto.ubicacion}
+                  </p>
+                  <p>
+                    Estado: {producto.estado}
+                  </p>
+                  
+<p>
+  Productor: {producto.nombreProductor || 'No disponible'}
+</p>
+
+<p>
+  Teléfono: {producto.telefonoProductor || 'No disponible'}
+</p>
+
+{producto.telefonoProductor && (
+  <div>
+    <a href={`tel:${producto.telefonoProductor}`}>
+      Llamar al productor
+    </a>
+
+    {' | '}
+
+    <a
+      href={`https://wa.me/${producto.telefonoProductor.replace(/\D/g, '').length === 10
+        ? `57${producto.telefonoProductor.replace(/\D/g, '')}`
+        : producto.telefonoProductor.replace(/\D/g, '')}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      Contactar por WhatsApp
+    </a>
+  </div>
+)}
+
                 </li>
               ))}
             </ul>
@@ -129,7 +168,6 @@ function App() {
           )}
         </section>
 
-        {/* Botón para mostrar el formulario */}
         <section className="accion-publicar">
           <button
             type="button"
@@ -143,13 +181,11 @@ function App() {
           </button>
         </section>
 
-        {/* Formulario de publicación */}
         {mostrarPublicar && (
           <PublicarProducto
             onProductoPublicado={agregarProducto}
           />
         )}
-
       </main>
     </div>
   )
